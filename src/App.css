@@ -318,10 +318,6 @@
   transform: none;
 }
 
-.wallet-status {
-  margin-top: 1.5rem;
-}
-
 .status-ok {
   color: var(--success);
   font-weight: 600;

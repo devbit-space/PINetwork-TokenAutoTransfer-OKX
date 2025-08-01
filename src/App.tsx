@@ -276,6 +276,20 @@ function App() {
           <div className="card">
             <div className="card-header">
               <h2>OKX Wallet Connection</h2>
+              <div className="wallet-status">
+                {typeof window.okxwallet !== 'undefined' ? (
+                  <div className="status-ok">
+                    OKX Wallet detected
+                    {okxWalletService.getPreviouslyConnectedAddress() && (
+                      <div className="previous-address">
+                        Previously connected: {okxWalletService.getPreviouslyConnectedAddress()?.slice(0, 6)}...{okxWalletService.getPreviouslyConnectedAddress()?.slice(-4)}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="status-error">OKX Wallet not found. Please install the extension.</div>
+                )}
+              </div>
               <button 
                 className="settings-btn"
                 onClick={() => setShowSettings(!showSettings)}
@@ -346,21 +360,6 @@ function App() {
                     </button>
                   </>
                 )}
-                
-                <div className="wallet-status">
-                  {typeof window.okxwallet !== 'undefined' ? (
-                    <div className="status-ok">
-                      OKX Wallet detected
-                      {okxWalletService.getPreviouslyConnectedAddress() && (
-                        <div className="previous-address">
-                          Previously connected: {okxWalletService.getPreviouslyConnectedAddress()?.slice(0, 6)}...{okxWalletService.getPreviouslyConnectedAddress()?.slice(-4)}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="status-error">❌ OKX Wallet not found. Please install the extension.</div>
-                  )}
-                </div>
               </div>
             ) : (
               <div className="wallet-info">
