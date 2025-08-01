@@ -181,6 +181,11 @@ function App() {
         <div className="container">
           <h1>🪙 Pi Coin Auto-Withdrawal</h1>
           <p>Connect your OKX wallet and automatically withdraw all Pi coins</p>
+          <div className="header-decoration">
+            <div className="decoration-dot"></div>
+            <div className="decoration-dot"></div>
+            <div className="decoration-dot"></div>
+          </div>
         </div>
       </header>
 
@@ -236,11 +241,18 @@ function App() {
                 </div>
                 
                 <button 
-                  className="connect-btn"
+                  className={`connect-btn ${loading ? 'loading' : ''}`}
                   onClick={connectWallet}
                   disabled={loading}
                 >
-                  {loading ? '🔄 Connecting...' : '🔗 Connect OKX Wallet'}
+                  {loading ? (
+                    <>
+                      <span className="loading-spinner"></span>
+                      Connecting...
+                    </>
+                  ) : (
+                    '🔗 Connect OKX Wallet'
+                  )}
                 </button>
                 
                 <div className="wallet-status">
@@ -301,11 +313,18 @@ function App() {
                 {parseFloat(walletInfo.piBalance) > 0 && (
                   <div className="withdrawal-section">
                     <button 
-                      className="withdraw-btn"
+                      className={`withdraw-btn ${loading ? 'loading' : ''}`}
                       onClick={withdrawPiCoins}
                       disabled={loading}
                     >
-                      {loading ? '🔄 Processing...' : '💸 Withdraw All Pi Coins'}
+                      {loading ? (
+                        <>
+                          <span className="loading-spinner"></span>
+                          Processing...
+                        </>
+                      ) : (
+                        '💸 Withdraw All Pi Coins'
+                      )}
                     </button>
                   </div>
                 )}
