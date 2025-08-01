@@ -29,6 +29,31 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   
+  /* Responsive Typography */
+  --text-xs: clamp(0.75rem, 1.5vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 2vw, 1rem);
+  --text-base: clamp(1rem, 2.5vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 3vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 4vw, 1.5rem);
+  --text-2xl: clamp(1.5rem, 5vw, 1.875rem);
+  --text-3xl: clamp(1.875rem, 6vw, 2.25rem);
+  --text-4xl: clamp(2.25rem, 8vw, 3rem);
+  
+  /* Responsive Spacing */
+  --space-xs: clamp(0.25rem, 0.5vw, 0.5rem);
+  --space-sm: clamp(0.5rem, 1vw, 1rem);
+  --space-md: clamp(1rem, 2vw, 1.5rem);
+  --space-lg: clamp(1.5rem, 3vw, 2rem);
+  --space-xl: clamp(2rem, 4vw, 3rem);
+  --space-2xl: clamp(3rem, 6vw, 4rem);
+  
+  /* Responsive Border Radius */
+  --radius-sm: clamp(0.375rem, 1vw, 0.5rem);
+  --radius-md: clamp(0.5rem, 1.5vw, 0.75rem);
+  --radius-lg: clamp(0.75rem, 2vw, 1rem);
+  --radius-xl: clamp(1rem, 3vw, 1.5rem);
+  --radius-2xl: clamp(1.5rem, 4vw, 2rem);
+  
   /* Typography */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   line-height: 1.6;
@@ -43,6 +68,12 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  
+  /* Responsive Breakpoints */
+  --mobile: 480px;
+  --tablet: 768px;
+  --desktop: 1024px;
+  --wide: 1280px;
 }
 
 * {
@@ -68,10 +99,10 @@ body {
 
 /* Modern Button Styles */
 button {
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid transparent;
-  padding: 0.75em 1.5em;
-  font-size: 0.95em;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-sm);
   font-weight: 600;
   font-family: inherit;
   background-color: var(--primary);
@@ -80,6 +111,11 @@ button {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  min-height: 44px; /* Touch-friendly minimum */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
 }
 
 button:hover {
@@ -102,13 +138,16 @@ button:disabled {
 /* Modern Input Styles */
 input {
   font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
+  font-size: var(--text-base);
+  line-height: 1.5;
   background: var(--bg-secondary);
   border: 1px solid var(--border-light);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   color: var(--text-primary);
   transition: all 0.3s ease;
+  padding: var(--space-sm) var(--space-md);
+  min-height: 48px; /* Touch-friendly minimum */
+  width: 100%;
 }
 
 input:focus {
@@ -182,15 +221,62 @@ input:focus {
   animation: shimmer 1.5s infinite;
 }
 
-/* Responsive Typography */
+/* Enhanced Responsive Design */
 @media (max-width: 768px) {
   :root {
     font-size: 14px;
   }
+  
+  button {
+    padding: var(--space-md) var(--space-lg);
+    font-size: var(--text-base);
+    min-height: 48px;
+  }
+  
+  input {
+    font-size: var(--text-base);
+    padding: var(--space-md) var(--space-lg);
+    min-height: 52px;
+  }
 }
 
-/* Focus Visible for Accessibility */
+@media (max-width: 480px) {
+  button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  input {
+    font-size: var(--text-base);
+  }
+}
+
+/* Enhanced Focus States for Accessibility */
 *:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* Enhanced Touch Interactions for Mobile */
+@media (hover: none) and (pointer: coarse) {
+  button:hover {
+    transform: none;
+  }
+  
+  button:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Enhanced Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  button:hover {
+    transform: none;
+  }
 }
