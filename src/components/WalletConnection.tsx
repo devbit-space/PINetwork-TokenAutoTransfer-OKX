@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import okxWalletService from '../services/okxWalletService';
 import type { WalletInfo, PiWithdrawalResult } from '../services/okxWalletService';
 import { ethers } from 'ethers';
+import NetworkSelector from './NetworkSelector';
+import { config } from '../config/environment';
 
 interface TransactionStatus {
   hash: string;
@@ -67,6 +69,9 @@ function WithdrawalModal({ isOpen, onClose, onConfirm, walletInfo, loading }: Wi
               </div>
               <div className="wallet-balance">
                 <strong>ETH Balance:</strong> {walletInfo?.balance} ETH
+              </div>
+              <div className="wallet-network">
+                <strong>Network:</strong> {walletInfo?.network}
               </div>
             </div>
           </div>
@@ -137,12 +142,13 @@ function WalletConnection() {
   const [showSettings, setShowSettings] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+  const [currentNetwork, setCurrentNetwork] = useState(okxWalletService.getCurrentNetwork());
 
   // Check if wallet is already connected on component mount
   useEffect(() => {
     const autoReconnect = async () => {
-      // Check if wallet was previously connected
-      if (okxWalletService.isWalletPreviouslyConnected()) {
+      // Check if auto-reconnect is enabled and wallet was previously connected
+      if (config.ENABLE_AUTO_RECONNECT && okxWalletService.isWalletPreviouslyConnected()) {
         setIsReconnecting(true);
         setSuccess('🔄 Attempting to reconnect wallet...');
         
@@ -151,6 +157,7 @@ function WalletConnection() {
           const reconnectedWallet = await okxWalletService.reconnectWallet();
           if (reconnectedWallet) {
             setWalletInfo(reconnectedWallet);
+            setCurrentNetwork(okxWalletService.getCurrentNetwork());
             setSuccess('Wallet automatically reconnected!');
           } else {
             setSuccess('ℹ️ No active wallet connection found');
@@ -179,6 +186,7 @@ function WalletConnection() {
         try {
           const newWalletData = await okxWalletService.connectWallet();
           setWalletInfo(newWalletData);
+          setCurrentNetwork(okxWalletService.getCurrentNetwork());
           setSuccess('Connected to new wallet account!');
         } catch (error) {
           console.error('Error connecting to new account:', error);
@@ -208,12 +216,17 @@ function WalletConnection() {
           const balance = await okxWalletService['provider']?.getBalance(address);
           const ethBalance = balance ? ethers.formatEther(balance) : '0';
           
+          const networks = okxWalletService.getAvailableNetworks();
+          const currentNetwork = okxWalletService.getCurrentNetwork();
+          const networkInfo = networks[currentNetwork as keyof typeof networks];
+          
           setWalletInfo({
             address,
             balance: ethBalance,
             piBalance: '0', // Not used for ETH
-            network: 'Ethereum',
-            isConnected: true
+            network: networkInfo.name,
+            isConnected: true,
+            chainId: networkInfo.chainId
           });
         }
       } catch (error) {
@@ -232,6 +245,7 @@ function WalletConnection() {
     try {
       const walletData = await okxWalletService.connectWallet();
       setWalletInfo(walletData);
+      setCurrentNetwork(okxWalletService.getCurrentNetwork());
       setSuccess('OKX Wallet connected successfully!');
     } catch (err: any) {
       setError(`${err.message}`);
@@ -276,8 +290,10 @@ function WalletConnection() {
           confirmed: false
         });
         
-        // Monitor transaction status
-        monitorTransactionStatus(result.transactionHash!);
+        // Monitor transaction status if enabled
+        if (config.ENABLE_TRANSACTION_MONITORING) {
+          monitorTransactionStatus(result.transactionHash!);
+        }
         
         // Refresh wallet info to show updated balance
         setTimeout(refreshWalletInfo, 2000);
@@ -292,8 +308,12 @@ function WalletConnection() {
   };
 
   const monitorTransactionStatus = async (txHash: string) => {
+    const txConfig = okxWalletService.getTransactionConfig();
     let attempts = 0;
-    const maxAttempts = 30; // 30 seconds
+    const maxAttempts = txConfig.maxTimeout;
+    const checkInterval = txConfig.checkInterval;
+    
+    setSuccess('🔄 Transaction submitted! Monitoring for confirmation...');
     
     const checkStatus = async () => {
       try {
@@ -306,18 +326,36 @@ function WalletConnection() {
             blockNumber: status.blockNumber,
             gasUsed: status.gasUsed
           });
-          setSuccess('Transaction confirmed on blockchain!');
+          setSuccess('✅ Transaction confirmed on blockchain!');
+          
+          // Refresh wallet info to show updated balance
+          setTimeout(refreshWalletInfo, 1000);
           return;
         }
         
         attempts++;
         if (attempts < maxAttempts) {
-          setTimeout(checkStatus, 1000);
+          // Update status message with attempt count
+          const remainingTime = Math.ceil((maxAttempts - attempts) * checkInterval / 1000);
+          setSuccess(`⏳ Transaction pending... Checking confirmation (${remainingTime}s remaining)`);
+          setTimeout(checkStatus, checkInterval);
         } else {
-          setError('⚠️ Transaction status check timeout. Please verify manually.');
+          setError('⚠️ Transaction status check timeout. Please verify manually on the blockchain explorer.');
+          // Keep the transaction status visible so user can check manually
+          setTransactionStatus({
+            hash: txHash,
+            confirmed: false
+          });
         }
       } catch (error) {
         console.error('Error checking transaction status:', error);
+        attempts++;
+        
+        if (attempts < maxAttempts) {
+          setTimeout(checkStatus, checkInterval);
+        } else {
+          setError('⚠️ Unable to verify transaction status. Please check manually on the blockchain explorer.');
+        }
       }
     };
     
@@ -329,11 +367,17 @@ function WalletConnection() {
     setSuccess('Copied to clipboard!');
   };
 
+  const handleNetworkChange = (networkName: string) => {
+    setCurrentNetwork(networkName);
+    // Refresh wallet info to update network display
+    setTimeout(refreshWalletInfo, 1000);
+  };
+
   return (
     <>
       <div className="card">
         <div className="card-header">
-          <h2>OKX Wallet Connection</h2>
+          <h2>{config.APP_NAME}</h2>
           <div className="wallet-status">
             {typeof window.okxwallet !== 'undefined' ? (
               <div className="status-ok">
@@ -358,10 +402,11 @@ function WalletConnection() {
         
         {showSettings && (
           <div className="settings-panel">
-            <h3>Withdrawal Settings</h3>
-            <p className="settings-info">
-              Configure your withdrawal preferences and target wallet addresses.
-            </p>
+            <h3>Network Settings</h3>
+            <NetworkSelector 
+              currentNetwork={currentNetwork}
+              onNetworkChange={handleNetworkChange}
+            />
           </div>
         )}
         
@@ -379,6 +424,7 @@ function WalletConnection() {
                   <h3>Instructions</h3>
                   <ol>
                     <li>Install OKX Wallet browser extension</li>
+                    <li>Select your preferred network (Mainnet/Testnet)</li>
                     <li>Make sure you have ETH in your wallet</li>
                     <li>Click "Connect Wallet" below</li>
                     <li>Approve the connection in OKX Wallet</li>
@@ -410,6 +456,12 @@ function WalletConnection() {
               <button className="disconnect-btn" onClick={disconnectWallet}>
                 Disconnect
               </button>
+            </div>
+            
+            <div className="network-display">
+              <span className="network-badge">
+                {walletInfo.network}
+              </span>
             </div>
             
             <div className="balance-cards">
@@ -504,6 +556,8 @@ function WalletConnection() {
           <li>✅ The withdrawal process is irreversible once confirmed</li>
           <li>⚠️ Always verify the target address before confirming</li>
           <li>⚠️ Keep your private keys secure and never share them</li>
+          <li>🌐 Support for Mainnet, Sepolia, and Goerli testnets</li>
+          <li>⚙️ Version: {config.APP_VERSION}</li>
         </ul>
       </div>
 

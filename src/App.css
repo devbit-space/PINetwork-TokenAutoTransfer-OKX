@@ -58,6 +58,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  margin-bottom: 2rem;
 }
 
 .nav-links {
@@ -1817,5 +1818,381 @@
   .withdraw-btn, .refresh-btn {
     width: 100%;
     min-width: unset;
+  }
+}
+
+/* Network Selector */
+.network-selector {
+  margin-top: 1rem;
+}
+
+.network-selector-header {
+  margin-bottom: 1.5rem;
+}
+
+.network-selector-header h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.network-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.network-option {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: var(--bg-glass);
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.network-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--network-color, var(--primary));
+  transition: all 0.3s ease;
+}
+
+.network-option:hover {
+  background: var(--bg-card);
+  border-color: var(--network-color, var(--primary));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.network-option.selected {
+  background: var(--bg-card);
+  border-color: var(--network-color, var(--primary));
+  box-shadow: var(--shadow-lg);
+}
+
+.network-option.selected::before {
+  width: 6px;
+}
+
+.network-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.network-icon {
+  font-size: 1.5rem;
+  width: 2rem;
+  text-align: center;
+}
+
+.network-info {
+  flex: 1;
+}
+
+.network-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.network-chain-id {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.selected-indicator {
+  color: var(--success);
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.network-info-panel {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.network-info-panel h5 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.network-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.detail-item {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.detail-item strong {
+  color: var(--text-primary);
+  margin-right: 0.5rem;
+}
+
+.explorer-link {
+  color: var(--primary);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.explorer-link:hover {
+  text-decoration: underline;
+}
+
+/* Network Display */
+.network-display {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.network-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.network-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  opacity: 0.1;
+  z-index: -1;
+}
+
+/* Responsive Network Selector */
+@media (max-width: 768px) {
+  .network-options {
+    gap: 0.5rem;
+  }
+  
+  .network-option {
+    padding: 0.75rem 1rem;
+  }
+  
+  .network-icon {
+    font-size: 1.25rem;
+    width: 1.5rem;
+  }
+  
+  .network-name {
+    font-size: 0.9rem;
+  }
+  
+  .network-chain-id {
+    font-size: 0.8rem;
+  }
+}
+
+/* App Header */
+.app-header {
+  text-align: center;
+  padding: 2rem 1rem;
+  background: var(--bg-glass);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.app-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.app-header p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.app-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Configuration Validator */
+.config-validator {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 2px solid;
+  background: var(--bg-glass);
+}
+
+.config-validator.success {
+  border-color: var(--success);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.config-validator.error {
+  border-color: var(--error);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.config-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+}
+
+.status-icon {
+  font-size: 1.2rem;
+}
+
+.status-text {
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.details-btn {
+  padding: 0.5rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.details-btn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.config-details {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.config-details h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.config-item {
+  padding: 0.75rem;
+  background: var(--bg-card);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.config-item strong {
+  color: var(--text-primary);
+  margin-right: 0.5rem;
+}
+
+.error-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.error-item {
+  padding: 0.5rem 0;
+  color: var(--error);
+  font-size: 0.9rem;
+}
+
+.config-help {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary);
+}
+
+.config-help h5 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.config-help ol {
+  margin: 0;
+  padding-left: 1.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.config-help li {
+  margin-bottom: 0.5rem;
+}
+
+.config-help code {
+  background: var(--bg-glass);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: monospace;
+  color: var(--primary);
+}
+
+/* Responsive Config Validator */
+@media (max-width: 768px) {
+  .config-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .config-status {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .details-btn {
+    align-self: flex-end;
   }
 }

