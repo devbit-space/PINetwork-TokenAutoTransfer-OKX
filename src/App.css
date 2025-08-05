@@ -733,6 +733,7 @@
   margin-bottom: 0.75rem;
   color: var(--text-secondary);
   line-height: 1.6;
+  word-wrap: break-word;
 }
 
 /* Transaction Status */

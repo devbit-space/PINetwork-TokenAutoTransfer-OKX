@@ -240,7 +240,7 @@ function WalletStatus({ walletAddress }: WalletStatusProps) {
             <div className="connection-status">
               <strong>Connection Status:</strong>
               <span className={`status-indicator ${statusData.isConnected ? 'connected' : 'disconnected'}`}>
-                {statusData.isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+                {statusData.isConnected ? ' 🟢 Connected' : ' 🔴 Disconnected'}
               </span>
             </div>
 
